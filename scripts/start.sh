@@ -50,7 +50,7 @@ if [[ $(docker-compose ps openldap | grep Exit) =~ "Exit" ]] ; then
 fi
 
 # Bring up base cluster and Confluent CLI
-docker-compose up -d zookeeper kafka1 kafka2 tools
+docker-compose up -d zookeeper1 zookeeper2 zookeeper3  kafka1 kafka2 tools
 
 # Verify MDS has started
 MAX_WAIT=120

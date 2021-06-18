@@ -1,38 +1,122 @@
+
 # docker-compose supports environment variable substitution with the ${VARIABLE-NAME} syntax.
 # Environment variables can be sourced in a variety of ways.  One of those ways is through
 # a well known '.env' file located in the same folder as the docker-compose.yml file.  See the Docker
 # documentation for details: https://docs.docker.com/compose/environment-variables/#the-env-file
-# 
+#
 # This feature is being used to parameterize some values within this file.  In this directory is also
 # a .env file, which is actually a symbolic link to <examples-root>/utils/config.env.  That file
 # contains values which get substituted here when docker-compose parses this file.
 #
 # If you'd like to view the docker-compose.yml file rendered with its environment variable substitutions
-# you can execute the `docker-compose config` command.  Take note that some demos provide additional 
+# you can execute the `docker-compose config` command.  Take note that some demos provide additional
 # environment variable values by exporting them in a script prior to running `docker-compose up`.
 ---
 version: "2.3"
 services:
 
-  zookeeper:
+  zookeeper1:
     image: ${REPOSITORY}/cp-zookeeper:${CONFLUENT_DOCKER_TAG}
     restart: always
-    hostname: zookeeper
-    container_name: zookeeper
+    hostname: zookeeper1
+    container_name: zookeeper1
     ports:
-      - 2181:2181
-      - 2182:2182
+      - 22181:22181
+      - 22182:22182 
+      - 7001:7001
     environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_SERVER_ID: 1
+      ZOOKEEPER_INIT_LIMIT: 5
+      ZOOKEEPER_SYNC_LIMIT: 2
+      ZOOKEEPER_CLIENT_PORT: 22181
       ZOOKEEPER_TICK_TIME: 2000
-      ZOOKEEPER_SECURE_CLIENT_PORT: 2182
+      ZOOKEEPER_SECURE_CLIENT_PORT: 22182
       ZOOKEEPER_SERVER_CNXN_FACTORY: org.apache.zookeeper.server.NettyServerCnxnFactory
-      ZOOKEEPER_SSL_KEYSTORE_LOCATION: /etc/kafka/secrets/kafka.zookeeper.keystore.jks
+      ZOOKEEPER_SSL_KEYSTORE_LOCATION: /etc/kafka/secrets/kafka.zookeeper1.keystore.jks
       ZOOKEEPER_SSL_KEYSTORE_PASSWORD: confluent
       ZOOKEEPER_SSL_KEYSTORE_TYPE: PKCS12
-      ZOOKEEPER_SSL_TRUSTSTORE_LOCATION: /etc/kafka/secrets/kafka.zookeeper.truststore.jks
+      ZOOKEEPER_SSL_TRUSTSTORE_LOCATION: /etc/kafka/secrets/kafka.zookeeper1.truststore.jks
       ZOOKEEPER_SSL_TRUSTSTORE_PASSWORD: confluent
       ZOOKEEPER_SSL_TRUSTSTORE_TYPE: JKS
+      ZOOKEEPER_SERVERS: "zookeeper1:22888:23888;zookeeper2:32888:33888;zookeeper3:42888:43888"
+
+      # TLS 1.2 is the tested-default - TLS 1.3 has not been tested for production
+      # You can evaluate TLS 1.3 for ZooKeeper by uncommenting the following two properties
+      # and setting KAFKA_ZOOKEEPER_SSL_PROTOCOL on brokers
+      #ZOOKEEPER_SSL_ENABLED_PROTOCOLS: TLSv1.3,TLSv1.2
+      #ZOOKEEPER_SSL_QUORUM_ENABLED_PROTOCOLS: TLSv1.3,TLSv1.2
+
+      ZOOKEEPER_SSL_CIPHER_SUITES: ${SSL_CIPHER_SUITES}
+      ZOOKEEPER_SSL_CLIENT_AUTH: need
+      ZOOKEEPER_AUTH_PROVIDER_X509: org.apache.zookeeper.server.auth.X509AuthenticationProvider
+      ZOOKEEPER_AUTH_PROVIDER_SASL: org.apache.zookeeper.server.auth.SASLAuthenticationProvider
+      KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/secrets/zookeeper_jaas.conf
+    volumes:
+      - ./scripts/security:/etc/kafka/secrets
+
+  zookeeper2:
+    image: ${REPOSITORY}/cp-zookeeper:${CONFLUENT_DOCKER_TAG}
+    restart: always
+    hostname: zookeeper2
+    container_name: zookeeper2
+    ports:
+      - 32181:32181
+      - 32182:32182
+      - 7009:7009
+    environment:
+      ZOOKEEPER_SERVER_ID: 2
+      ZOOKEEPER_INIT_LIMIT: 5
+      ZOOKEEPER_SYNC_LIMIT: 2
+      ZOOKEEPER_CLIENT_PORT: 32181
+      ZOOKEEPER_TICK_TIME: 2000
+      ZOOKEEPER_SECURE_CLIENT_PORT: 32182
+      ZOOKEEPER_SERVER_CNXN_FACTORY: org.apache.zookeeper.server.NettyServerCnxnFactory
+      ZOOKEEPER_SSL_KEYSTORE_LOCATION: /etc/kafka/secrets/kafka.zookeeper2.keystore.jks
+      ZOOKEEPER_SSL_KEYSTORE_PASSWORD: confluent
+      ZOOKEEPER_SSL_KEYSTORE_TYPE: PKCS12
+      ZOOKEEPER_SSL_TRUSTSTORE_LOCATION: /etc/kafka/secrets/kafka.zookeeper2.truststore.jks
+      ZOOKEEPER_SSL_TRUSTSTORE_PASSWORD: confluent
+      ZOOKEEPER_SSL_TRUSTSTORE_TYPE: JKS
+      ZOOKEEPER_SERVERS: "zookeeper1:22888:23888;zookeeper2:32888:33888;zookeeper3:42888:43888"
+
+      # TLS 1.2 is the tested-default - TLS 1.3 has not been tested for production
+      # You can evaluate TLS 1.3 for ZooKeeper by uncommenting the following two properties
+      # and setting KAFKA_ZOOKEEPER_SSL_PROTOCOL on brokers
+      #ZOOKEEPER_SSL_ENABLED_PROTOCOLS: TLSv1.3,TLSv1.2
+      #ZOOKEEPER_SSL_QUORUM_ENABLED_PROTOCOLS: TLSv1.3,TLSv1.2
+
+      ZOOKEEPER_SSL_CIPHER_SUITES: ${SSL_CIPHER_SUITES}
+      ZOOKEEPER_SSL_CLIENT_AUTH: need
+      ZOOKEEPER_AUTH_PROVIDER_X509: org.apache.zookeeper.server.auth.X509AuthenticationProvider
+      ZOOKEEPER_AUTH_PROVIDER_SASL: org.apache.zookeeper.server.auth.SASLAuthenticationProvider
+      KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/secrets/zookeeper_jaas.conf
+    volumes:
+      - ./scripts/security:/etc/kafka/secrets
+
+  zookeeper3:
+    image: ${REPOSITORY}/cp-zookeeper:${CONFLUENT_DOCKER_TAG}
+    restart: always
+    hostname: zookeeper3
+    container_name: zookeeper3
+    ports:
+      - 42181:42181
+      - 42182:42182
+      - 7010:7010
+    environment:
+      ZOOKEEPER_SERVER_ID: 3
+      ZOOKEEPER_INIT_LIMIT: 5
+      ZOOKEEPER_SYNC_LIMIT: 2
+      ZOOKEEPER_CLIENT_PORT: 42181
+      ZOOKEEPER_TICK_TIME: 2000
+      ZOOKEEPER_SECURE_CLIENT_PORT: 42182
+      ZOOKEEPER_SERVER_CNXN_FACTORY: org.apache.zookeeper.server.NettyServerCnxnFactory
+      ZOOKEEPER_SSL_KEYSTORE_LOCATION: /etc/kafka/secrets/kafka.zookeeper3.keystore.jks
+      ZOOKEEPER_SSL_KEYSTORE_PASSWORD: confluent
+      ZOOKEEPER_SSL_KEYSTORE_TYPE: PKCS12
+      ZOOKEEPER_SSL_TRUSTSTORE_LOCATION: /etc/kafka/secrets/kafka.zookeeper3.truststore.jks
+      ZOOKEEPER_SSL_TRUSTSTORE_PASSWORD: confluent
+      ZOOKEEPER_SSL_TRUSTSTORE_TYPE: JKS
+      ZOOKEEPER_SERVERS: "zookeeper1:22888:23888;zookeeper2:32888:33888;zookeeper3:42888:43888"
 
       # TLS 1.2 is the tested-default - TLS 1.3 has not been tested for production
       # You can evaluate TLS 1.3 for ZooKeeper by uncommenting the following two properties
@@ -53,7 +137,9 @@ services:
     hostname: tools
     container_name: tools
     depends_on:
-      - zookeeper
+      - zookeeper1
+      - zookeeper2
+      - zookeeper3
       - kafka1
       - kafka2
     volumes:
@@ -83,7 +169,9 @@ services:
     hostname: kafka1
     container_name: kafka1
     depends_on:
-      - zookeeper
+      - zookeeper1
+      - zookeeper2
+      - zookeeper3
       - openldap
     volumes:
       - ./scripts/security/keypair:/tmp/conf
@@ -96,8 +184,9 @@ services:
       - 10091:10091
       - 11091:11091
       - 12091:12091
+      - 7002:7002
     environment:
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2182
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper1:22182, zookeeper2:32182, zookeeper3:42182
       KAFKA_ZOOKEEPER_SSL_CLIENT_ENABLE: 'true'
 
       # Broker uses TLSv1.2 by-default for ZooKeeper TLS connections
@@ -117,7 +206,7 @@ services:
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:SASL_PLAINTEXT,TOKEN:SASL_SSL,SSL:SSL,CLEAR:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
       KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka1:9091,TOKEN://kafka1:10091,SSL://kafka1:11091,CLEAR://kafka1:12091
-      
+
       KAFKA_SUPER_USERS: User:admin;User:mds;User:superUser;User:ANONYMOUS
       KAFKA_LOG4J_LOGGERS: "kafka.authorizer.logger=INFO"
       KAFKA_LOG4J_ROOT_LOGLEVEL: INFO
@@ -254,7 +343,9 @@ services:
     hostname: kafka2
     container_name: kafka2
     depends_on:
-      - zookeeper
+      - zookeeper1
+      - zookeeper2
+      - zookeeper3
       - openldap
     volumes:
       - ./scripts/security/keypair:/tmp/conf
@@ -267,8 +358,9 @@ services:
       - 10092:10092
       - 11092:11092
       - 12092:12092
+      - 7003:7003
     environment:
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2182
+      KAFKA_ZOOKEEPER_CONNECT:  zookeeper1:22182, zookeeper2:32182, zookeeper3:42182
       KAFKA_ZOOKEEPER_SSL_CLIENT_ENABLE: 'true'
 
       # Broker uses TLSv1.2 by-default for ZooKeeper TLS connections
@@ -288,7 +380,7 @@ services:
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:SASL_PLAINTEXT,TOKEN:SASL_SSL,SSL:SSL,CLEAR:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
       KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka2:9092,TOKEN://kafka2:10092,SSL://kafka2:11092,CLEAR://kafka2:12092
-      
+
       KAFKA_SUPER_USERS: User:admin;User:mds;User:superUser;User:ANONYMOUS
       KAFKA_LOG4J_LOGGERS: "kafka.authorizer.logger=INFO"
       KAFKA_LOG4J_ROOT_LOGLEVEL: INFO
@@ -419,7 +511,7 @@ services:
       KAFKA_KAFKA_REST_CONFLUENT_METADATA_BASIC_AUTH_USER_INFO: 'restAdmin:restAdmin'
       KAFKA_KAFKA_REST_CONFLUENT_METADATA_SERVER_URLS_MAX_AGE_MS: 60000
       KAFKA_KAFKA_REST_CLIENT_CONFLUENT_METADATA_SERVER_URLS_MAX_AGE_MS: 60000
-        
+
   connect:
     image: localbuild/connect:${CONFLUENT_DOCKER_TAG}-${CONNECTOR_VERSION}
     container_name: connect
@@ -436,6 +528,7 @@ services:
       - ./scripts/security/keypair:/tmp/conf
     ports:
       - 8083:8083
+      - 7005:7005
     environment:
       CUB_CLASSPATH: '/usr/share/java/confluent-security/connect/*:/usr/share/java/kafka/*:/usr/share/java/cp-base-new/*'
 
@@ -591,35 +684,6 @@ services:
                   -XX:MaxGCPauseMillis=10000 -XX:InitiatingHeapOccupancyPercent=35 -XX:+ExplicitGCInvokesConcurrent
                   -XX:MaxInlineLevel=15 -Djava.awt.headless=true
 
-
-  elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch-oss:7.10.0
-    container_name: elasticsearch
-    #restart: always
-    ports:
-      - 9200:9200
-      - 9300:9300
-    environment:
-      discovery.type: "single-node"
-      ES_JAVA_OPTS: "-Xms1g -Xmx1g"
-      cluster.name: "elasticsearch-cp-demo"
-
-  kibana:
-    image: docker.elastic.co/kibana/kibana-oss:7.10.0
-    container_name: kibana
-    restart: always
-    depends_on:
-      - elasticsearch
-    ports:
-      - 5601:5601
-    environment:
-      NEWSFEED_ENABLED: 'false'
-      TELEMETRY_OPTIN: 'false'
-      TELEMETRY_ENABLED: 'false'
-      SERVER_MAXPAYLOADBYTES: 4194304
-      KIBANA_AUTOCOMPLETETIMEOUT: 3000
-      KIBANA_AUTOCOMPLETETERMINATEAFTER: 2500000
-
   control-center:
     image: ${REPOSITORY}/cp-enterprise-control-center:${CONFLUENT_DOCKER_TAG}
     hostname: control-center
@@ -668,7 +732,7 @@ services:
       CONTROL_CENTER_STREAMS_SSL_KEYSTORE_PASSWORD: confluent
       CONTROL_CENTER_STREAMS_SSL_KEY_PASSWORD: confluent
 
-      # HTTP and HTTPS to Control Center UI 
+      # HTTP and HTTPS to Control Center UI
       CONTROL_CENTER_REST_LISTENERS: http://0.0.0.0:9021,https://0.0.0.0:9022
       CONTROL_CENTER_REST_SSL_TRUSTSTORE_LOCATION: /etc/kafka/secrets/kafka.controlCenterAndKsqlDBServer.truststore.jks
       CONTROL_CENTER_REST_SSL_TRUSTSTORE_PASSWORD: confluent
@@ -697,7 +761,7 @@ services:
       # RBAC
       CONTROL_CENTER_REST_AUTHENTICATION_METHOD: BEARER
       PUBLIC_KEY_PATH: /tmp/conf/public.pem
-      
+
       # Used by Control Center to connect to MDS to verify tokens and authenticate clients
       CONFLUENT_METADATA_BOOTSTRAP_SERVER_URLS: https://kafka1:8091,https://kafka2:8092
       CONFLUENT_METADATA_BASIC_AUTH_USER_INFO: controlcenterAdmin:controlcenterAdmin
@@ -717,6 +781,7 @@ services:
       - ./scripts/security/keypair:/tmp/conf
     ports:
       - 8085:8085
+      - 7006:7006
     environment:
       CUB_CLASSPATH: '/usr/share/java/confluent-security/schema-registry/*:/usr/share/java/schema-registry/*:/usr/share/java/cp-base-new/*'
 
@@ -784,6 +849,7 @@ services:
     ports:
       - 8088:8088
       - 8089:8089
+      - 7007:7007
     environment:
       CUB_CLASSPATH: '/usr/share/java/confluent-security/ksql/*:/usr/share/java/ksqldb-server/*:/usr/share/java/cp-base-new/*'
 
@@ -807,7 +873,7 @@ services:
       KSQL_HOST_NAME: ksqldb-server
       KSQL_LISTENERS: "http://0.0.0.0:8088,https://0.0.0.0:8089"
       KSQL_CACHE_MAX_BYTES_BUFFERING: 0
-      
+
       KSQL_KSQL_SECURITY_EXTENSION_CLASS: io.confluent.ksql.security.KsqlConfluentSecurityExtension
 
       # Enable bearer token authentication which allows the identity of the ksqlDB end user to be propagated to Kafka for authorization
@@ -826,7 +892,7 @@ services:
       KSQL_SSL_KEYSTORE_LOCATION: /etc/kafka/secrets/kafka.controlCenterAndKsqlDBServer.keystore.jks
       KSQL_SSL_KEYSTORE_PASSWORD: confluent
       KSQL_SSL_KEY_PASSWORD: confluent
-      # Before v6.1.0: disabling TLSv1.x is required 
+      # Before v6.1.0: disabling TLSv1.x is required
       KSQL_SSL_ENABLED_PROTOCOLS: "TLSv1.3,TLSv1.2"
       KSQL_SSL_CIPHER_SUITES: "TLS_AES_256_GCM_SHA384,TLS_CHACHA20_POLY1305_SHA256,TLS_AES_128_GCM_SHA256,TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256,TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256,TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256"
 
@@ -850,7 +916,7 @@ services:
 
       # Confluent Monitoring Interceptors for Control Center streams monitoring
       KSQL_PRODUCER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor"
-      KSQL_CONSUMER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor"    
+      KSQL_CONSUMER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor"
       KSQL_CONFLUENT_MONITORING_INTERCEPTOR_SSL_TRUSTSTORE_LOCATION: /etc/kafka/secrets/kafka.controlCenterAndKsqlDBServer.truststore.jks
       KSQL_CONFLUENT_MONITORING_INTERCEPTOR_SSL_TRUSTSTORE_PASSWORD: confluent
       KSQL_CONFLUENT_MONITORING_INTERCEPTOR_SSL_KEYSTORE_LOCATION: /etc/kafka/secrets/kafka.controlCenterAndKsqlDBServer.keystore.jks
@@ -893,6 +959,7 @@ services:
       - ./scripts/security/keypair:/tmp/conf
     ports:
       - 8086:8086
+      - 7008:7008
     environment:
       KAFKA_REST_HOST_NAME: restproxy
       KAFKA_REST_BOOTSTRAP_SERVERS: SASL_SSL://kafka1:10091,SASL_SSL://kafka2:10092
@@ -917,7 +984,7 @@ services:
 
       # Credentials and classpath for cub kafka-ready
       CUB_CLASSPATH: '/usr/share/java/confluent-security/kafka-rest/*:/usr/share/java/kafka-rest/*:/usr/share/java/cp-base-new/*'
-      
+
       # Enable OAuth for REST Proxy's embedded Kafka client that accesses and manages consumer groups and topics
       KAFKA_REST_CLIENT_SECURITY_PROTOCOL: SASL_SSL
       KAFKA_REST_CLIENT_SASL_MECHANISM: OAUTHBEARER
@@ -951,6 +1018,8 @@ services:
       - schemaregistry
       - connect
     hostname: streams-demo
+    ports:
+      - 7004:7004
     container_name: streams-demo
     volumes:
       - ./scripts/security:/etc/kafka/secrets
